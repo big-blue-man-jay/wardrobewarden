@@ -38,3 +38,18 @@ export function useEntry(date: string | undefined): JournalEntry | null | undefi
     [date],
   );
 }
+
+/** Adds pieces to a day's entry, creating the entry if needed. Returns false if all were already logged. */
+export async function addItemsToDay(date: string, itemIds: string[]): Promise<boolean> {
+  return db.transaction('rw', db.journal, async () => {
+    const existing = await db.journal.where('date').equals(date).first();
+    if (!existing) {
+      await saveEntry(date, { itemIds });
+      return true;
+    }
+    const missing = itemIds.filter((id) => !existing.itemIds.includes(id));
+    if (missing.length === 0) return false;
+    await db.journal.update(existing.id, { itemIds: [...existing.itemIds, ...missing], updatedAt: Date.now() });
+    return true;
+  });
+}

@@ -1,5 +1,6 @@
 import { createHashRouter, Navigate, RouterProvider } from 'react-router';
-import { AppLayout } from './components/layout/AppLayout';
+import { AppLayout, type RouteHandle } from './components/layout/AppLayout';
+import { AddItemPage } from './features/add/AddItemPage';
 import { ClosetPage } from './features/closet/ClosetPage';
 import { InsightsPage } from './features/insights/InsightsPage';
 import { ItemPage } from './features/item/ItemPage';
@@ -16,7 +17,7 @@ const router = createHashRouter([
       { index: true, element: <Navigate to="/closet" replace /> },
       { path: 'closet', element: <ClosetPage /> },
       { path: 'closet/:id', element: <ItemPage /> },
-      { path: 'add', element: <Placeholder title="Add piece" milestone="M2" back /> },
+      { path: 'add', element: <AddItemPage />, handle: { hideTabBar: true } satisfies RouteHandle },
       { path: 'looks', element: <LooksPage /> },
       { path: 'looks/new', element: <Placeholder title="New look" milestone="M4" back /> },
       { path: 'looks/:id', element: <Placeholder title="Look" milestone="M4" back /> },

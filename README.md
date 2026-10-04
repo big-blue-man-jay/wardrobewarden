@@ -15,7 +15,17 @@ npm run preview      # serve the production build (with service worker) on :4173
 npm test             # unit tests (dates, demo data)
 ```
 
-## Open it on your phone (same Wi-Fi)
+## Use it on your phone (hosted)
+
+Every push to `claude/wardrobe-prototype-vaixut` (or `main`) builds and publishes the app to
+**https://big-blue-man-jay.github.io/wardrobewarden/** via `.github/workflows/deploy.yml`.
+
+- One-time setup: repo **Settings → Pages → Source: GitHub Actions**.
+- On iPhone: open the link in Safari → Share → **Add to Home Screen**. On Android: Chrome menu → **Install app**.
+- Your data is stored only in your phone's browser; the website just serves the app code.
+  Visitors to the link get their own empty copy and can't see or change your data.
+
+## Open the dev server on your phone (same Wi-Fi)
 
 1. `npm run dev` — the dev server already listens on all interfaces (`server.host: true`, same as `vite --host`).
 2. Vite prints a `Network:` URL like `http://192.168.1.23:5173`. Open that on your phone.

@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Link } from 'react-router';
-import { GearIcon } from '../../components/ui/icons';
+import { GearIcon, HangerIcon } from '../../components/ui/icons';
 import { db } from '../../db/db';
 import { useEntry } from '../../db/journal';
 import { loggingStreak, monthName, parseISODate, todayISO, weekdayLong } from '../../lib/dates';
@@ -13,6 +13,7 @@ export function TodayPage() {
   const today = todayISO();
   const entry = useEntry(today);
   const d = parseISODate(today);
+  const itemCount = useLiveQuery(() => db.items.count(), []);
   const streak = useLiveQuery(async () => {
     const dates = await db.journal.orderBy('date').keys();
     return loggingStreak(new Set(dates as string[]), today);
@@ -52,6 +53,18 @@ export function TodayPage() {
             </p>
           )}
         </section>
+
+        {itemCount === 0 && (
+          <Link to="/add" className="tap flex items-center gap-4 rounded-3xl border border-line bg-card p-4">
+            <span className="rounded-full bg-accent-soft p-3 text-accent">
+              <HangerIcon />
+            </span>
+            <span>
+              <span className="block font-medium">Start your closet</span>
+              <span className="block text-sm text-muted">Photograph your first piece. It takes about 30 seconds.</span>
+            </span>
+          </Link>
+        )}
 
         <ForgottenNudge today={today} />
       </div>

@@ -20,7 +20,8 @@ type Removal =
   | { state: 'running'; progress?: RemovalProgress }
   | { state: 'done' }
   | { state: 'failed' }
-  | { state: 'skipped' };
+  | { state: 'skipped' }
+  | { state: 'imported' };
 
 /** Photo → automatic background removal with progress → before/after toggle. Falls back to the original. */
 export function PhotoStep({
@@ -63,7 +64,19 @@ export function PhotoStep({
     setPreparing(true);
     setError(undefined);
     try {
-      const { photo, thumbnail } = await preparePhoto(file);
+      const { photo, thumbnail, cutout } = await preparePhoto(file);
+      if (cutout) {
+        // Already cut out (e.g. iPhone "lift subject"): keep it as the cutout, no removal needed.
+        onChange({
+          original: photo,
+          originalThumb: thumbnail,
+          cutout: cutout.cutout,
+          cutoutThumb: cutout.thumbnail,
+          preferOriginal: false,
+        });
+        setRemoval({ state: 'imported' });
+        return;
+      }
       const base: PhotoValue = { original: photo, originalThumb: thumbnail, preferOriginal: true };
       onChange(base);
       if (enabled) void runRemoval(base);
@@ -118,7 +131,7 @@ export function PhotoStep({
       </div>
 
       <div className="mt-3 space-y-3">
-        {value.cutout && (
+        {value.cutout && removal.state !== 'imported' && (
           <div>
             <Segmented
               options={[
@@ -140,6 +153,11 @@ export function PhotoStep({
             >
               Try again
             </button>
+          </p>
+        )}
+        {removal.state === 'imported' && (
+          <p className="text-center text-xs text-muted">
+            This photo already has a transparent background, so it's used as the cutout.
           </p>
         )}
         {removal.state === 'off' && (

@@ -1,35 +1,55 @@
 import { createHashRouter, Navigate, RouterProvider } from 'react-router';
 import { AppLayout, type RouteHandle } from './components/layout/AppLayout';
-import { AddItemPage } from './features/add/AddItemPage';
-import { ClosetPage } from './features/closet/ClosetPage';
-import { InsightsPage } from './features/insights/InsightsPage';
-import { ItemPage } from './features/item/ItemPage';
-import { EntryPage } from './features/journal/EntryPage';
-import { JournalPage } from './features/journal/JournalPage';
-import { LookBuilderPage } from './features/looks/LookBuilderPage';
-import { LookPage } from './features/looks/LookPage';
-import { LooksPage } from './features/looks/LooksPage';
-import { SettingsPage } from './features/settings/SettingsPage';
 import { TodayPage } from './features/today/TodayPage';
 
-// Hash routing works on any static host and offline without server rewrites.
+const fullScreen = { hideTabBar: true } satisfies RouteHandle;
+
+// Today (the start screen) is bundled up front; every other screen loads on demand.
+// All chunks are precached by the service worker, so this works offline too.
 const router = createHashRouter([
   {
     element: <AppLayout />,
+    // Shown for a moment when the app opens directly on a lazily loaded screen.
+    hydrateFallbackElement: <div className="min-h-dvh bg-paper" />,
     children: [
       { index: true, element: <Navigate to="/today" replace /> },
       { path: 'today', element: <TodayPage /> },
-      { path: 'closet', element: <ClosetPage /> },
-      { path: 'closet/:id', element: <ItemPage /> },
-      { path: 'add', element: <AddItemPage />, handle: { hideTabBar: true } satisfies RouteHandle },
-      { path: 'looks', element: <LooksPage /> },
-      { path: 'looks/new', element: <LookBuilderPage />, handle: { hideTabBar: true } satisfies RouteHandle },
-      { path: 'looks/:id', element: <LookPage /> },
-      { path: 'looks/:id/edit', element: <LookBuilderPage />, handle: { hideTabBar: true } satisfies RouteHandle },
-      { path: 'journal', element: <JournalPage /> },
-      { path: 'journal/:date', element: <EntryPage />, handle: { hideTabBar: true } satisfies RouteHandle },
-      { path: 'insights', element: <InsightsPage /> },
-      { path: 'settings', element: <SettingsPage /> },
+      { path: 'closet', lazy: async () => ({ Component: (await import('./features/closet/ClosetPage')).ClosetPage }) },
+      { path: 'closet/:id', lazy: async () => ({ Component: (await import('./features/item/ItemPage')).ItemPage }) },
+      {
+        path: 'add',
+        handle: fullScreen,
+        lazy: async () => ({ Component: (await import('./features/add/AddItemPage')).AddItemPage }),
+      },
+      { path: 'looks', lazy: async () => ({ Component: (await import('./features/looks/LooksPage')).LooksPage }) },
+      {
+        path: 'looks/new',
+        handle: fullScreen,
+        lazy: async () => ({ Component: (await import('./features/looks/LookBuilderPage')).LookBuilderPage }),
+      },
+      { path: 'looks/:id', lazy: async () => ({ Component: (await import('./features/looks/LookPage')).LookPage }) },
+      {
+        path: 'looks/:id/edit',
+        handle: fullScreen,
+        lazy: async () => ({ Component: (await import('./features/looks/LookBuilderPage')).LookBuilderPage }),
+      },
+      {
+        path: 'journal',
+        lazy: async () => ({ Component: (await import('./features/journal/JournalPage')).JournalPage }),
+      },
+      {
+        path: 'journal/:date',
+        handle: fullScreen,
+        lazy: async () => ({ Component: (await import('./features/journal/EntryPage')).EntryPage }),
+      },
+      {
+        path: 'insights',
+        lazy: async () => ({ Component: (await import('./features/insights/InsightsPage')).InsightsPage }),
+      },
+      {
+        path: 'settings',
+        lazy: async () => ({ Component: (await import('./features/settings/SettingsPage')).SettingsPage }),
+      },
       { path: '*', element: <Navigate to="/today" replace /> },
     ],
   },

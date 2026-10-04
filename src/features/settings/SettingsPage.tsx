@@ -6,6 +6,7 @@ import { hasDemoData, removeDemoData, seedDemoData } from '../../db/seed/demo';
 import { setSetting, useSetting } from '../../db/settings';
 import { APP_NAME } from '../../config/app';
 import { getRemover } from '../../image/backgroundRemoval';
+import { BackupSection } from './BackupSection';
 
 const CURRENCIES = ['EUR', 'USD', 'GBP', 'CHF', 'SEK', 'DKK', 'NOK', 'PLN', 'CAD', 'AUD', 'JPY'];
 
@@ -45,6 +46,8 @@ export function SettingsPage() {
             </select>
           </Row>
         </Section>
+
+        <BackupSection Section={Section} />
 
         <BackgroundRemovalSection />
 

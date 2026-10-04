@@ -64,12 +64,43 @@ export async function resizeImage(
   return canvasToBlob(canvas, 'image/jpeg', quality);
 }
 
-/** A newly picked photo, resized for storage, plus its grid thumbnail. */
-export async function preparePhoto(file: Blob): Promise<{ photo: Blob; thumbnail: Blob }> {
+/** True if a meaningful part of the image is transparent (e.g. an iPhone "lift subject" cutout). */
+export function hasTransparency(img: Drawable): boolean {
+  const n = 64;
+  const canvas = document.createElement('canvas');
+  canvas.width = n;
+  canvas.height = n;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+  ctx.drawImage(img, 0, 0, n, n);
+  const { data } = ctx.getImageData(0, 0, n, n);
+  let clear = 0;
+  for (let i = 3; i < data.length; i += 4) if (data[i] < 200) clear++;
+  return clear > n * n * 0.05;
+}
+
+export interface PreparedPhoto {
+  /** Resized photo (flattened onto white if it had transparency). */
+  photo: Blob;
+  thumbnail: Blob;
+  /** Present when the picked image was already a cutout with a transparent background. */
+  cutout?: { cutout: Blob; thumbnail: Blob };
+}
+
+/** A newly picked photo, resized for storage, plus its grid thumbnail. Transparent images are kept as cutouts. */
+export async function preparePhoto(file: Blob): Promise<PreparedPhoto> {
   const img = await decodeImage(file);
+  const transparent = hasTransparency(img);
   const [photo, thumbnail] = await Promise.all([resizeImage(img, IMAGE_MAX_EDGE), resizeImage(img, THUMB_MAX_EDGE)]);
+  let cutout: PreparedPhoto['cutout'];
+  if (transparent) {
+    const trimmed = await trimTransparent(file).catch(() => undefined);
+    if (trimmed) {
+      const c = await resizeImage(trimmed, IMAGE_MAX_EDGE, { transparent: true });
+      cutout = { cutout: c, thumbnail: await makeThumbnail(c, true) };
+    }
+  }
   if ('close' in img) img.close();
-  return { photo, thumbnail };
+  return { photo, thumbnail, cutout };
 }
 
 /** Thumbnail for an already-stored photo or cutout. */

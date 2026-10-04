@@ -11,6 +11,8 @@ export interface Settings {
   lastOccasions: OccasionId[];
   /** Set after the background-removal model has been downloaded once (it's then cached for offline use). */
   bgModelReady: boolean;
+  /** When I last exported a backup (ms). */
+  lastBackupAt: number | null;
   /** Set once demo data has been loaded (or skipped) so it isn't re-added after removal. */
   demoSeeded: boolean;
 }
@@ -22,6 +24,7 @@ export const DEFAULT_SETTINGS: Settings = {
   lastOccasions: [],
   demoSeeded: false,
   bgModelReady: false,
+  lastBackupAt: null,
 };
 
 export async function getSetting<K extends keyof Settings>(key: K): Promise<Settings[K]> {

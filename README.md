@@ -47,7 +47,7 @@ Each origin (LAN address vs. hosted URL) has its own separate data. Use Export/I
 | `src/config/app.ts` | Currency default, "forgotten" threshold, image sizes |
 | `src/db/` | Dexie schema, all reads/writes, demo seed data |
 | `src/image/` | Image resizing and background removal |
-| `src/features/` | One folder per screen |
+| `src/features/` | One folder per screen (`today/` is the landing screen) |
 | `src/components/` | Shared UI (tab bar, sheets, chips, item tiles) |
 
 ## Data model notes (changes vs. the brief)

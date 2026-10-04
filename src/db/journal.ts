@@ -53,3 +53,20 @@ export async function addItemsToDay(date: string, itemIds: string[]): Promise<bo
     return true;
   });
 }
+
+/** Sets (or replaces) a day's outfit photo, keeping the pieces already logged. */
+export async function setDayPhoto(date: string, photo: Blob, photoThumb: Blob): Promise<void> {
+  await db.transaction('rw', db.journal, async () => {
+    const existing = await db.journal.where('date').equals(date).first();
+    if (existing) await db.journal.update(existing.id, { photo, photoThumb, updatedAt: Date.now() });
+    else await saveEntry(date, { itemIds: [], photo, photoThumb });
+  });
+}
+
+/** Entries between two dates (inclusive), keyed by date. */
+export function useEntriesBetween(from: string, to: string): Map<string, JournalEntry> | undefined {
+  return useLiveQuery(
+    async () => new Map((await db.journal.where('date').between(from, to, true, true).toArray()).map((e) => [e.date, e])),
+    [from, to],
+  );
+}

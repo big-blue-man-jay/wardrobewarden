@@ -31,3 +31,18 @@ describe('dates', () => {
     expect(formatOwnedFor('2022', now)).toBe('~4 years');
   });
 });
+
+import { loggingStreak, startOfWeek } from './dates';
+
+describe('weeks and streaks', () => {
+  it('finds the Monday of a week', () => {
+    expect(startOfWeek('2026-10-04')).toBe('2026-09-28'); // Sunday → previous Monday
+    expect(startOfWeek('2026-09-28')).toBe('2026-09-28');
+  });
+  it('counts a streak ending today or yesterday', () => {
+    const logged = new Set(['2026-10-01', '2026-10-02', '2026-10-03']);
+    expect(loggingStreak(logged, '2026-10-04')).toBe(3);
+    expect(loggingStreak(new Set([...logged, '2026-10-04']), '2026-10-04')).toBe(4);
+    expect(loggingStreak(logged, '2026-10-06')).toBe(0);
+  });
+});

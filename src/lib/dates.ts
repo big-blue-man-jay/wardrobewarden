@@ -89,3 +89,25 @@ export function formatOwnedFor(purchaseDate: string | undefined, now: Date = new
   if (approx || rest === 0 || years >= 5) return `${approx}${years} year${years === 1 ? '' : 's'}`;
   return `${years} year${years === 1 ? '' : 's'}, ${rest} month${rest === 1 ? '' : 's'}`;
 }
+
+/** Monday of the week containing `iso`. */
+export function startOfWeek(iso: string): string {
+  const d = parseISODate(iso);
+  const offset = (d.getDay() + 6) % 7; // Mon = 0
+  return addDays(iso, -offset);
+}
+
+export const weekdayShort = (iso: string) => WEEKDAYS_SHORT[parseISODate(iso).getDay()];
+export const weekdayLong = (iso: string) =>
+  ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][parseISODate(iso).getDay()];
+
+/** Consecutive logged days ending today (or yesterday, if today isn't logged yet). */
+export function loggingStreak(loggedDates: Set<string>, today: string): number {
+  let day = loggedDates.has(today) ? today : addDays(today, -1);
+  let n = 0;
+  while (loggedDates.has(day)) {
+    n += 1;
+    day = addDays(day, -1);
+  }
+  return n;
+}

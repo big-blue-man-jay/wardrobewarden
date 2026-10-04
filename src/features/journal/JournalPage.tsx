@@ -15,7 +15,7 @@ export function JournalPage() {
       <div className="mx-auto max-w-3xl space-y-3 px-4">
         {entries?.length === 0 && (
           <EmptyState icon={<CalendarIcon size={28} />} title="No outfits logged">
-            Tap + and choose <em>Log today's outfit</em>.
+            Tap <strong>Today</strong> in the middle of the tab bar to log your outfit.
           </EmptyState>
         )}
         {entries?.map((e) => (

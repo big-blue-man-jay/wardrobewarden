@@ -173,7 +173,8 @@ function EntryEditor({ date }: { date: string }) {
             <FieldLabel hint={look ? `From look: ${look.name}` : undefined}>What I wore</FieldLabel>
             {items.length > 0 && (
               <>
-                <Collage items={items} className="mx-auto mb-3 max-w-[16rem]" />
+                {/* With a mirror photo above, the photo is the picture of the day; skip the drawn preview. */}
+                {!photoUrl && <Collage items={items} className="mx-auto mb-3 max-w-[16rem]" />}
                 <ul className="mb-3 flex flex-wrap gap-2">
                   {items.map((i) => (
                     <li key={i.id}>

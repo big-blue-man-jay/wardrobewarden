@@ -1,7 +1,6 @@
 import { Link, useSearchParams } from 'react-router';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { EntryThumb } from '../../components/journal/EntryThumb';
-import { ThumbStrip } from '../../components/items/ThumbStrip';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { CalendarIcon, ChevronLeftIcon, ChevronRightIcon } from '../../components/ui/icons';
 import { occasionLabel } from '../../config/tags';
@@ -145,28 +144,27 @@ function Feed() {
   );
 }
 
+/** A day in the list: the mirror photo when there is one, otherwise a mini flat-lay of the pieces. */
 function FeedCard({ entry: e }: { entry: JournalEntry }) {
-  const photo = useBlobUrl(e.photoThumb);
+  const photo = useBlobUrl(e.photoThumb ?? e.photo);
   return (
     <Link to={`/journal/${e.date}`} className="tap flex gap-3 rounded-2xl border border-line bg-card p-3">
       {photo ? (
-        <img src={photo} alt="" className="h-24 w-20 shrink-0 rounded-xl object-cover" />
+        <img src={photo} alt="Outfit photo" className="aspect-[4/5] w-28 shrink-0 rounded-xl object-cover" />
       ) : (
-        <EntryThumb entry={e} className="w-20 shrink-0" />
+        <EntryThumb entry={e} className="w-24 shrink-0" />
       )}
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline justify-between gap-2">
           <p className="font-serif text-lg">{formatDay(e.date)}</p>
           {e.rating && <span className="shrink-0 text-sm text-accent">{'★'.repeat(e.rating)}</span>}
         </div>
-        {e.occasion && <p className="text-xs text-muted">{occasionLabel(e.occasion)}</p>}
-        {photo && e.itemIds.length > 0 && (
-          <div className="mt-1.5">
-            <ThumbStrip itemIds={e.itemIds} max={4} />
-          </div>
-        )}
-        {!photo && <p className="mt-1 text-xs text-muted">{plural(e.itemIds.length, 'piece')}</p>}
-        {e.note && <p className="mt-1.5 line-clamp-2 text-sm text-muted">{e.note}</p>}
+        <p className="text-xs text-muted">
+          {[e.occasion && occasionLabel(e.occasion), e.itemIds.length > 0 && plural(e.itemIds.length, 'piece')]
+            .filter(Boolean)
+            .join(' · ')}
+        </p>
+        {e.note && <p className="mt-1.5 line-clamp-3 text-sm text-muted">{e.note}</p>}
       </div>
     </Link>
   );

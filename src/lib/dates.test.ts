@@ -46,3 +46,24 @@ describe('weeks and streaks', () => {
     expect(loggingStreak(logged, '2026-10-06')).toBe(0);
   });
 });
+
+import { addMonths, formatMonth, isValidISODate, monthGrid } from './dates';
+
+describe('months', () => {
+  it('builds a Monday-first grid', () => {
+    const grid = monthGrid('2026-10'); // 1 Oct 2026 is a Thursday
+    expect(grid.slice(0, 4)).toEqual([null, null, null, '2026-10-01']);
+    expect(grid.filter(Boolean)).toHaveLength(31);
+    expect(grid.length % 7).toBe(0);
+  });
+  it('moves between months and formats them', () => {
+    expect(addMonths('2026-01', -1)).toBe('2025-12');
+    expect(addMonths('2026-12', 1)).toBe('2027-01');
+    expect(formatMonth('2026-10')).toBe('October 2026');
+  });
+  it('validates ISO dates', () => {
+    expect(isValidISODate('2026-02-29')).toBe(false);
+    expect(isValidISODate('2028-02-29')).toBe(true);
+    expect(isValidISODate('today')).toBe(false);
+  });
+});

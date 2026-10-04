@@ -4,11 +4,11 @@ import { AddItemPage } from './features/add/AddItemPage';
 import { ClosetPage } from './features/closet/ClosetPage';
 import { InsightsPage } from './features/insights/InsightsPage';
 import { ItemPage } from './features/item/ItemPage';
+import { EntryPage } from './features/journal/EntryPage';
 import { JournalPage } from './features/journal/JournalPage';
 import { LookBuilderPage } from './features/looks/LookBuilderPage';
 import { LookPage } from './features/looks/LookPage';
 import { LooksPage } from './features/looks/LooksPage';
-import { Placeholder } from './features/Placeholder';
 import { SettingsPage } from './features/settings/SettingsPage';
 import { TodayPage } from './features/today/TodayPage';
 
@@ -27,7 +27,7 @@ const router = createHashRouter([
       { path: 'looks/:id', element: <LookPage /> },
       { path: 'looks/:id/edit', element: <LookBuilderPage />, handle: { hideTabBar: true } satisfies RouteHandle },
       { path: 'journal', element: <JournalPage /> },
-      { path: 'journal/:date', element: <Placeholder title="Journal entry" milestone="M5" back /> },
+      { path: 'journal/:date', element: <EntryPage />, handle: { hideTabBar: true } satisfies RouteHandle },
       { path: 'insights', element: <InsightsPage /> },
       { path: 'settings', element: <SettingsPage /> },
       { path: '*', element: <Navigate to="/today" replace /> },

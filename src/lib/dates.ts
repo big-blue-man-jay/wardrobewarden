@@ -111,3 +111,35 @@ export function loggingStreak(loggedDates: Set<string>, today: string): number {
   }
   return n;
 }
+
+/** 'YYYY-MM' for a date. */
+export const monthKey = (iso: string) => iso.slice(0, 7);
+
+export function addMonths(month: string, delta: number): string {
+  const [y, m] = month.split('-').map(Number);
+  const d = new Date(y, m - 1 + delta, 1);
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+}
+
+/** "October 2026". */
+export function formatMonth(month: string): string {
+  const [y, m] = month.split('-').map(Number);
+  return `${MONTHS_LONG[m - 1]} ${y}`;
+}
+
+/** Calendar cells for a month, Monday first; `null` pads the first and last week. */
+export function monthGrid(month: string): (string | null)[] {
+  const first = `${month}-01`;
+  const lead = (parseISODate(first).getDay() + 6) % 7;
+  const [y, m] = month.split('-').map(Number);
+  const days = new Date(y, m, 0).getDate();
+  const cells: (string | null)[] = Array(lead).fill(null);
+  for (let d = 1; d <= days; d++) cells.push(`${month}-${pad(d)}`);
+  while (cells.length % 7) cells.push(null);
+  return cells;
+}
+
+export function isValidISODate(s: string | undefined): s is string {
+  if (!s || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+  return toISODate(parseISODate(s)) === s;
+}

@@ -20,6 +20,7 @@ import {
   emptySlots,
   fitsSlot,
   itemIdsFromSlots,
+  orderForOutfit,
   placeItem,
   SLOTS,
   slotsFromItems,
@@ -58,7 +59,7 @@ export function LookBuilderPage() {
       setSeasons(existing.seasons);
     } else {
       const ids = [params.get('item'), ...(params.get('items')?.split(',') ?? [])].filter((x): x is string => !!x);
-      setSlots(lookup(ids).reduce(placeItem, emptySlots()));
+      setSlots(orderForOutfit(lookup(ids)).reduce(placeItem, emptySlots()));
     }
     setReady(true);
   }, [ready, allItems, existing, byId, params]);
@@ -117,6 +118,23 @@ export function LookBuilderPage() {
                 onOpen={() => setPicking(slot)}
               />
             ))}
+            {slots.extra.length > 0 && (
+              <div className="flex items-center gap-3 rounded-2xl border border-dashed border-line p-2.5">
+                <div className="flex shrink-0 gap-1.5">
+                  {slots.extra
+                    .map((x) => byId.get(x))
+                    .filter((i): i is Item => !!i)
+                    .slice(0, 4)
+                    .map((i) => (
+                      <ItemThumb key={i.id} item={i} className="w-12 rounded-xl" />
+                    ))}
+                </div>
+                <p className="min-w-0 flex-1 text-xs text-muted">Also in this outfit (doesn't fit a free slot)</p>
+                <button onClick={() => setSlots((s) => ({ ...s, extra: [] }))} className="tap pr-1 text-sm text-accent">
+                  Remove
+                </button>
+              </div>
+            )}
           </section>
 
           <TextField

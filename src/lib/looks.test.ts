@@ -9,7 +9,7 @@ describe('look slots', () => {
   it('rebuilds slots from stored item order; a second top becomes the layer', () => {
     const items = [it_('tee', 'top'), it_('jeans', 'bottom'), it_('cardigan', 'top'), it_('boots', 'shoes'), it_('belt', 'accessory'), it_('watch', 'accessory')];
     const slots = slotsFromItems(items);
-    expect(slots).toEqual({ top: ['tee'], bottom: ['jeans'], layer: ['cardigan'], shoes: ['boots'], bag: [], accessories: ['belt', 'watch'] });
+    expect(slots).toEqual({ top: ['tee'], bottom: ['jeans'], layer: ['cardigan'], shoes: ['boots'], bag: [], accessories: ['belt', 'watch'], extra: [] });
     expect(itemIdsFromSlots(slots)).toEqual(['tee', 'jeans', 'cardigan', 'boots', 'belt', 'watch']);
   });
 
@@ -28,5 +28,22 @@ describe('look slots', () => {
     const slots = slotsFromItems([it_('a', 'top'), it_('b', 'bottom'), it_('c', 'outerwear'), it_('d', 'shoes'), it_('e', 'bag'), it_('f', 'accessory')]);
     const placed = collageLayout(slots, false).map((p) => p.itemId).sort();
     expect(placed).toEqual(['a', 'b', 'c', 'd', 'e', 'f']);
+  });
+});
+
+import { orderForOutfit } from './looks';
+
+describe('outfit order', () => {
+  it('puts base tops before layering tops, then bottoms, outerwear, shoes, bags, accessories', () => {
+    const items = [it_('belt', 'accessory'), it_('cardi', 'top', 'cardigan'), it_('coat', 'outerwear'), it_('tee', 'top', 't-shirt'), it_('jeans', 'bottom')];
+    expect(orderForOutfit(items).map((i) => i.id)).toEqual(['tee', 'cardi', 'jeans', 'coat', 'belt']);
+    expect(slotsFromItems(orderForOutfit(items))).toMatchObject({ top: ['tee'], layer: ['cardi', 'coat'] });
+  });
+
+  it('never drops a piece: overflow goes to extra and still gets a collage spot', () => {
+    const items = [it_('a', 'shoes'), it_('b', 'shoes'), it_('c', 'bottom'), it_('d', 'dress')];
+    const slots = slotsFromItems(items);
+    expect(slots).toMatchObject({ shoes: ['a'], bottom: ['c'], extra: ['b', 'd'] });
+    expect(collageLayout(slots, false).map((p) => p.itemId).sort()).toEqual(['a', 'b', 'c', 'd']);
   });
 });

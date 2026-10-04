@@ -20,15 +20,18 @@ export const SLOTS: SlotDef[] = [
     label: 'Layer / outerwear',
     categories: ['outerwear', 'top'],
     layerTopTypes: ['cardigan', 'sweater', 'hoodie', 'sweatshirt', 'shirt'],
+    multiple: true,
   },
   { id: 'shoes', label: 'Shoes', categories: ['shoes'] },
   { id: 'bag', label: 'Bag', categories: ['bag'] },
   { id: 'accessories', label: 'Accessories', categories: ['accessory'], multiple: true },
 ];
 
-export type SlotMap = Record<SlotId, string[]>;
+/** Pieces per slot, plus `extra` for anything that doesn't fit a free slot (e.g. a second pair of shoes
+ *  logged in the journal), so no piece is ever dropped. */
+export type SlotMap = Record<SlotId, string[]> & { extra: string[] };
 
-export const emptySlots = (): SlotMap => ({ top: [], bottom: [], layer: [], shoes: [], bag: [], accessories: [] });
+export const emptySlots = (): SlotMap => ({ top: [], bottom: [], layer: [], shoes: [], bag: [], accessories: [], extra: [] });
 
 /** Can this piece go into this slot? */
 export function fitsSlot(item: Pick<Item, 'category' | 'subcategory'>, slot: SlotDef): boolean {
@@ -38,32 +41,34 @@ export function fitsSlot(item: Pick<Item, 'category' | 'subcategory'>, slot: Slo
   return slot.categories.includes(item.category);
 }
 
-/** Puts a piece into the slot its category belongs to. A second top becomes the layer. */
+/** Puts a piece into the slot its category belongs to. A second top becomes a layer. */
 export function placeItem(slots: SlotMap, item: Pick<Item, 'id' | 'category'>): SlotMap {
+  if (itemIdsFromSlots(slots).includes(item.id)) return slots;
   const next = { ...slots };
-  const set = (id: SlotId) => {
-    next[id] = id === 'accessories' ? [...new Set([...next[id], item.id])] : [item.id];
+  const add = (id: SlotId | 'extra') => {
+    next[id] = [...next[id], item.id];
   };
+  const single = (id: SlotId) => (next[id].length === 0 ? add(id) : add('extra'));
   switch (item.category) {
     case 'top':
-      set(next.top.length === 0 || next.top[0] === item.id ? 'top' : next.layer.length === 0 ? 'layer' : 'top');
+      if (next.top.length === 0) add('top');
+      else add('layer');
       break;
     case 'bottom':
     case 'dress':
-      set('bottom');
+      single('bottom');
       break;
     case 'outerwear':
-      set('layer');
+      add('layer');
       break;
     case 'shoes':
-      set('shoes');
+      single('shoes');
       break;
     case 'bag':
-      set('bag');
+      single('bag');
       break;
-    case 'accessory':
-      set('accessories');
-      break;
+    default:
+      add('accessories');
   }
   return next;
 }
@@ -75,7 +80,7 @@ export function slotsFromItems(items: Pick<Item, 'id' | 'category'>[]): SlotMap 
 
 /** Stored order: slot by slot, so a top saved before a cardigan stays the top. */
 export function itemIdsFromSlots(slots: SlotMap): string[] {
-  return SLOTS.flatMap((s) => slots[s.id]);
+  return [...SLOTS.flatMap((s) => slots[s.id]), ...slots.extra];
 }
 
 // ---- Flat-lay collage layout ----
@@ -106,7 +111,7 @@ export function collageLayout(slots: SlotMap, isDress: boolean): Placement[] {
     if (itemId) out.push({ itemId, left, top, size, z });
   };
   const [top] = slots.top;
-  const [layer] = slots.layer;
+  const [layer, ...moreLayers] = slots.layer;
   const [bottom] = slots.bottom;
   const dressAlone = isDress && !top;
 
@@ -118,10 +123,34 @@ export function collageLayout(slots: SlotMap, isDress: boolean): Placement[] {
   }
   put(slots.shoes[0], 33, 73, 32, 3);
   put(slots.bag[0], 66, 50, 30, 3);
-  slots.accessories.forEach((id, i) => {
+  // Further layers, accessories and extras share the spots around the edges.
+  [...moreLayers, ...slots.accessories, ...slots.extra].forEach((id, i) => {
     const spot = ACCESSORY_SPOTS[i % ACCESSORY_SPOTS.length];
     const wrap = Math.floor(i / ACCESSORY_SPOTS.length);
     put(id, spot.left + wrap * 4, spot.top + wrap * 4, spot.size, 4 + i);
   });
   return out;
+}
+
+/** Canonical order for an outfit's pieces (so the collage puts a tee as the top and a cardigan as the layer). */
+export function orderForOutfit<T extends Pick<Item, 'id' | 'category' | 'subcategory'>>(items: T[]): T[] {
+  const layerTypes = SLOTS.find((s) => s.id === 'layer')!.layerTopTypes!;
+  const rank = (i: T) => {
+    switch (i.category) {
+      case 'top':
+        return i.subcategory && layerTypes.includes(i.subcategory) ? 1 : 0;
+      case 'bottom':
+      case 'dress':
+        return 2;
+      case 'outerwear':
+        return 3;
+      case 'shoes':
+        return 4;
+      case 'bag':
+        return 5;
+      default:
+        return 6;
+    }
+  };
+  return [...items].sort((a, b) => rank(a) - rank(b));
 }

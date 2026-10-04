@@ -5,6 +5,7 @@ import { db } from '../../db/db';
 import { hasDemoData, removeDemoData, seedDemoData } from '../../db/seed/demo';
 import { setSetting, useSetting } from '../../db/settings';
 import { APP_NAME } from '../../config/app';
+import { getRemover } from '../../image/backgroundRemoval';
 
 const CURRENCIES = ['EUR', 'USD', 'GBP', 'CHF', 'SEK', 'DKK', 'NOK', 'PLN', 'CAD', 'AUD', 'JPY'];
 
@@ -45,6 +46,8 @@ export function SettingsPage() {
           </Row>
         </Section>
 
+        <BackgroundRemovalSection />
+
         <Section title="Demo data">
           <p className="text-sm text-muted">
             {demo
@@ -80,6 +83,81 @@ export function SettingsPage() {
         <p className="text-center text-xs text-muted">{APP_NAME} · prototype</p>
       </div>
     </div>
+  );
+}
+
+function BackgroundRemovalSection() {
+  const enabled = useSetting('backgroundRemoval');
+  const ready = useSetting('bgModelReady');
+  const [progress, setProgress] = useState<number | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  const download = async () => {
+    setFailed(false);
+    setProgress(0);
+    try {
+      await getRemover().preload((p) => p.stage === 'download' && setProgress(p.fraction));
+      await setSetting('bgModelReady', true);
+    } catch (err) {
+      console.warn(err);
+      setFailed(true);
+    } finally {
+      setProgress(null);
+    }
+  };
+
+  return (
+    <Section title="Background removal">
+      <Row label="Remove backgrounds automatically">
+        <Switch checked={enabled} onChange={(v) => setSetting('backgroundRemoval', v)} />
+      </Row>
+      <p className="mt-2 text-sm text-muted">
+        Runs on this device; photos never leave it. If a cutout fails or looks wrong, the original photo is used.
+      </p>
+      {enabled && (
+        <div className="mt-3 rounded-xl bg-paper p-3 text-sm">
+          {progress !== null ? (
+            <>
+              <p>Downloading… {Math.round(progress * 100)}%</p>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-tile">
+                <div className="h-full rounded-full bg-accent" style={{ width: `${progress * 100}%` }} />
+              </div>
+            </>
+          ) : ready ? (
+            <p>✓ Ready offline. The model is saved on this device.</p>
+          ) : (
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-muted">
+                {failed
+                  ? 'Download failed. Check your connection and try again.'
+                  : 'The model (~44 MB) downloads the first time you add a piece.'}
+              </p>
+              <button
+                onClick={download}
+                className="tap shrink-0 rounded-full border border-line bg-card px-3 py-1.5 font-medium"
+              >
+                Download now
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </Section>
+  );
+}
+
+function Switch({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${checked ? 'bg-ink' : 'bg-line'}`}
+    >
+      <span
+        className={`absolute top-0.5 left-0.5 h-6 w-6 rounded-full bg-card shadow transition-transform ${checked ? 'translate-x-5' : ''}`}
+      />
+    </button>
   );
 }
 

@@ -50,6 +50,20 @@ Each origin (LAN address vs. hosted URL) has its own separate data. Use Export/I
 | `src/features/` | One folder per screen (`today/` is the landing screen) |
 | `src/components/` | Shared UI (tab bar, sheets, chips, item tiles) |
 
+## Background removal
+
+- Runs fully in the browser with `@imgly/background-removal` **1.4.5** (pinned: it's the newest version whose
+  model files are published on npm as `@imgly/background-removal-data`; newer versions only ship them via
+  IMG.LY's CDN).
+- `scripts/bgRemovalAssets.ts` copies the "small" model (~44 MB) and the ONNX runtime files from
+  `node_modules` into `dist/bg-removal/` at build time (and serves them in dev). Nothing is fetched from
+  third parties. The service worker caches them on first use, so removal then works offline.
+- It runs in a Web Worker (`src/image/bgRemoval.worker.ts`) behind the small `BackgroundRemover` interface in
+  `src/image/backgroundRemoval.ts`; swap the implementation there.
+- If it fails, is skipped, or is switched off in Settings, the original photo is used. Both photos are kept.
+- **License:** `@imgly/background-removal` is AGPL-3.0. Fine for personal use; if you ever distribute or host
+  the app for others, AGPL obligations apply (or IMG.LY offers a commercial license).
+
 ## Data model notes (changes vs. the brief)
 
 - `Item.preferOriginal` — both photos are kept; this records whether the original is shown instead of the cutout.

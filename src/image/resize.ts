@@ -67,10 +67,7 @@ export async function resizeImage(
 /** A newly picked photo, resized for storage, plus its grid thumbnail. */
 export async function preparePhoto(file: Blob): Promise<{ photo: Blob; thumbnail: Blob }> {
   const img = await decodeImage(file);
-  const [photo, thumbnail] = await Promise.all([
-    resizeImage(img, IMAGE_MAX_EDGE),
-    resizeImage(img, THUMB_MAX_EDGE),
-  ]);
+  const [photo, thumbnail] = await Promise.all([resizeImage(img, IMAGE_MAX_EDGE), resizeImage(img, THUMB_MAX_EDGE)]);
   if ('close' in img) img.close();
   return { photo, thumbnail };
 }
@@ -78,4 +75,46 @@ export async function preparePhoto(file: Blob): Promise<{ photo: Blob; thumbnail
 /** Thumbnail for an already-stored photo or cutout. */
 export function makeThumbnail(blob: Blob, transparent: boolean): Promise<Blob> {
   return resizeImage(blob, THUMB_MAX_EDGE, { transparent });
+}
+
+/**
+ * Crops away fully transparent margins (plus a little padding), so cutouts fill their tile.
+ * Throws if the image is (almost) entirely transparent — i.e. the cutout found nothing.
+ */
+export async function trimTransparent(blob: Blob, padding = 0.04): Promise<Blob> {
+  const img = await decodeImage(blob);
+  const { w, h } = sizeOf(img);
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+  ctx.drawImage(img, 0, 0);
+  const { data } = ctx.getImageData(0, 0, w, h);
+  let minX = w,
+    minY = h,
+    maxX = -1,
+    maxY = -1,
+    opaque = 0;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (data[(y * w + x) * 4 + 3] > 24) {
+        opaque++;
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+  if (opaque < w * h * 0.01) throw new Error('Cutout is empty');
+  const pad = Math.round(Math.max(maxX - minX, maxY - minY) * padding);
+  const x0 = Math.max(0, minX - pad);
+  const y0 = Math.max(0, minY - pad);
+  const cw = Math.min(w, maxX + pad + 1) - x0;
+  const ch = Math.min(h, maxY + pad + 1) - y0;
+  const out = document.createElement('canvas');
+  out.width = cw;
+  out.height = ch;
+  out.getContext('2d')!.drawImage(canvas, x0, y0, cw, ch, 0, 0, cw, ch);
+  return canvasToBlob(out, 'image/png', 1);
 }

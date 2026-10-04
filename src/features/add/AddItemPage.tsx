@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { BottomActionBar } from '../../components/layout/BottomActionBar';
 import { PageHeader } from '../../components/layout/PageHeader';
-import { PhotoPicker } from '../../components/items/PhotoPicker';
+import { PhotoStep, type PhotoValue } from './PhotoStep';
 import { PurchaseDateField } from '../../components/items/PurchaseDateField';
 import {
   CategoryField,
@@ -20,25 +20,17 @@ import { useToast } from '../../components/ui/Toast';
 import type { CategoryId, OccasionId, SeasonId } from '../../config/tags';
 import { addItem } from '../../db/items';
 import { getSetting, setSetting } from '../../db/settings';
-import { useBlobUrl } from '../../hooks/useBlobUrl';
-import { preparePhoto } from '../../image/resize';
 import { findSimilar, pluralize } from '../../lib/insights';
 import { generateItemName } from '../../lib/naming';
 import { useItems } from '../../db/items';
 import { ItemThumb } from '../../components/items/ItemThumb';
 
-interface Photo {
-  original: Blob;
-  thumbnail: Blob;
-}
-
 export function AddItemPage() {
   const navigate = useNavigate();
   const toast = useToast();
 
-  const [photo, setPhoto] = useState<Photo>();
-  const [processing, setProcessing] = useState(false);
-  const [photoError, setPhotoError] = useState<string>();
+  const [photo, setPhoto] = useState<PhotoValue>();
+  const [photoBusy, setPhotoBusy] = useState(false);
 
   const [category, setCategory] = useState<CategoryId>();
   const [subcategory, setSubcategory] = useState<string>();
@@ -64,28 +56,13 @@ export function AddItemPage() {
     getSetting('lastOccasions').then(setOccasions);
   }, []);
 
-  const previewUrl = useBlobUrl(photo?.original);
   const autoName = generateItemName(category, subcategory, colors);
-  const canSave = !!photo && !!category && !saving;
+  const canSave = !!photo && !!category && !saving && !photoBusy;
   const allItems = useItems();
   const similar = useMemo(
     () => (allItems ? findSimilar(allItems, { category, subcategory, colors }) : []),
     [allItems, category, subcategory, colors],
   );
-
-  const pickPhoto = async (file: File) => {
-    setProcessing(true);
-    setPhotoError(undefined);
-    try {
-      const { photo: original, thumbnail } = await preparePhoto(file);
-      setPhoto({ original, thumbnail });
-    } catch (err) {
-      console.error(err);
-      setPhotoError("Couldn't read that photo. Try another one.");
-    } finally {
-      setProcessing(false);
-    }
-  };
 
   const changeCategory = (c: CategoryId) => {
     if (c !== category) setSubcategory(undefined);
@@ -112,8 +89,9 @@ export function AddItemPage() {
         condition,
         notes: notes.trim() || undefined,
         photoOriginal: photo.original,
-        preferOriginal: false,
-        thumbnail: photo.thumbnail,
+        photoCutout: photo.cutout,
+        preferOriginal: photo.preferOriginal || !photo.cutout,
+        thumbnail: photo.cutoutThumb && !photo.preferOriginal ? photo.cutoutThumb : photo.originalThumb,
       });
       await Promise.all([setSetting('lastSeasons', seasons), setSetting('lastOccasions', occasions)]);
       toast('Piece saved');
@@ -131,23 +109,7 @@ export function AddItemPage() {
         <PageHeader title="Add piece" back backTo="/closet" />
         <div className="mx-auto max-w-xl space-y-7 px-4 pb-32">
           <section>
-            {photo && previewUrl ? (
-              <div>
-                <div className="flex aspect-square items-center justify-center overflow-hidden rounded-3xl bg-tile">
-                  <img src={previewUrl} alt="New piece" className="h-full w-full object-cover" />
-                </div>
-                <div className="mt-3 flex justify-center">
-                  <PhotoPicker compact onPick={pickPhoto} />
-                </div>
-              </div>
-            ) : processing ? (
-              <div className="flex aspect-[2/1] items-center justify-center rounded-3xl bg-tile text-sm text-muted">
-                Preparing photo…
-              </div>
-            ) : (
-              <PhotoPicker onPick={pickPhoto} />
-            )}
-            {photoError && <p className="mt-2 text-sm text-accent">{photoError}</p>}
+            <PhotoStep value={photo} onChange={setPhoto} onBusyChange={setPhotoBusy} />
           </section>
 
           <CategoryField value={category} onChange={changeCategory} />

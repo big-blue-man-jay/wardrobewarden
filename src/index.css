@@ -58,6 +58,13 @@
 }
 /* 'backwards' (not 'both'): a lingering transform would make the element the containing block for
    position: fixed descendants. */
+@keyframes indeterminate {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(300%); }
+}
+@utility animate-indeterminate {
+  animation: indeterminate 1.4s ease-in-out infinite;
+}
 @utility animate-page {
   animation: fade-in 220ms ease-out backwards;
 }

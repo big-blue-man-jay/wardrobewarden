@@ -9,9 +9,11 @@ interface Props {
   back?: boolean;
   backTo?: string;
   actions?: ReactNode;
+  /** Extra sticky content under the title row (search, filter chips…). */
+  children?: ReactNode;
 }
 
-export function PageHeader({ title, subtitle, back, backTo = '/', actions }: Props) {
+export function PageHeader({ title, subtitle, back, backTo = '/', actions, children }: Props) {
   const navigate = useNavigate();
   const goBack = () => {
     if (window.history.state?.idx > 0) navigate(-1);
@@ -31,6 +33,7 @@ export function PageHeader({ title, subtitle, back, backTo = '/', actions }: Pro
         </div>
         {actions && <div className="flex items-center gap-1">{actions}</div>}
       </div>
+      {children && <div className="mx-auto max-w-3xl space-y-2 px-4 pb-3">{children}</div>}
     </header>
   );
 }

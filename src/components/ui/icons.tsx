@@ -114,3 +114,21 @@ export const PencilIcon = (p: IconProps) => (
     <path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z" />
   </Icon>
 );
+export const SearchIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <circle cx="11" cy="11" r="6.5" />
+    <path d="m20 20-4.2-4.2" />
+  </Icon>
+);
+export const SlidersIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M4 7h10M18 7h2M4 17h4M12 17h8" />
+    <circle cx="16" cy="7" r="2" />
+    <circle cx="10" cy="17" r="2" />
+  </Icon>
+);
+export const SortIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M7 4v16M3.5 16.5 7 20l3.5-3.5M17 20V4M13.5 7.5 17 4l3.5 3.5" />
+  </Icon>
+);

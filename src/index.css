@@ -1,0 +1,74 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-paper: #f6f3ee;
+  --color-card: #fffdf9;
+  --color-ink: #262522;
+  --color-muted: #7d776e;
+  --color-line: #e5dfd5;
+  --color-tile: #ece6dc;
+  --color-accent: #a4502f;
+  --color-accent-soft: #f3e3d9;
+
+  --font-serif: ui-serif, 'New York', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-paper text-ink font-sans antialiased;
+    overscroll-behavior-y: none;
+  }
+  button {
+    cursor: pointer;
+  }
+}
+
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Shared tap feedback: slight press-in on touch. */
+@utility tap {
+  transition: transform 120ms ease, opacity 120ms ease, background-color 150ms ease;
+  &:active {
+    transform: scale(0.97);
+    opacity: 0.85;
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: none; }
+}
+@keyframes backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@utility animate-page {
+  animation: fade-in 220ms ease-out both;
+}
+@utility animate-sheet {
+  animation: sheet-up 260ms cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+@utility animate-backdrop {
+  animation: backdrop-in 200ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+  }
+}

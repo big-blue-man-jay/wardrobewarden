@@ -15,8 +15,8 @@ const ToastContext = createContext<(message: string, action?: ToastAction) => vo
 
 export const useToast = () => useContext(ToastContext);
 
-/** Small confirmation message above the tab bar. */
-export function ToastProvider({ children }: { children: ReactNode }) {
+/** Small confirmation message above the tab bar (or below the header on full-screen flows). */
+export function ToastProvider({ children, atTop = false }: { children: ReactNode; atTop?: boolean }) {
   const [toast, setToast] = useState<ToastState | null>(null);
   const timer = useRef<number>(undefined);
   const navigate = useNavigate();
@@ -34,7 +34,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         <div
           key={toast.id}
           role="status"
-          className="animate-page fixed inset-x-4 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-50 mx-auto flex max-w-md items-center gap-3 rounded-2xl bg-ink px-4 py-3 text-sm text-paper shadow-lg"
+          className={`animate-page fixed inset-x-4 z-50 mx-auto flex max-w-md items-center gap-3 rounded-2xl bg-ink px-4 py-3 text-sm text-paper shadow-lg ${
+            // Full-screen flows have their own bottom action bar; keep toasts clear of it.
+            atTop ? 'top-[calc(4rem+env(safe-area-inset-top))]' : 'bottom-[calc(5.5rem+env(safe-area-inset-bottom))]'
+          }`}
         >
           <span className="flex-1">{toast.message}</span>
           {toast.action && (

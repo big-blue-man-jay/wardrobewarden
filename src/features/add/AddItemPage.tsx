@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { BottomActionBar } from '../../components/layout/BottomActionBar';
 import { PageHeader } from '../../components/layout/PageHeader';
@@ -22,7 +22,10 @@ import { addItem } from '../../db/items';
 import { getSetting, setSetting } from '../../db/settings';
 import { useBlobUrl } from '../../hooks/useBlobUrl';
 import { preparePhoto } from '../../image/resize';
+import { findSimilar, pluralize } from '../../lib/insights';
 import { generateItemName } from '../../lib/naming';
+import { useItems } from '../../db/items';
+import { ItemThumb } from '../../components/items/ItemThumb';
 
 interface Photo {
   original: Blob;
@@ -64,6 +67,11 @@ export function AddItemPage() {
   const previewUrl = useBlobUrl(photo?.original);
   const autoName = generateItemName(category, subcategory, colors);
   const canSave = !!photo && !!category && !saving;
+  const allItems = useItems();
+  const similar = useMemo(
+    () => (allItems ? findSimilar(allItems, { category, subcategory, colors }) : []),
+    [allItems, category, subcategory, colors],
+  );
 
   const pickPhoto = async (file: File) => {
     setProcessing(true);
@@ -197,6 +205,27 @@ export function AddItemPage() {
         </div>
       </div>
       <BottomActionBar>
+        {similar.length > 0 && (
+          <div className="animate-page mb-3 flex items-center gap-3 rounded-2xl bg-accent-soft p-2.5" role="status">
+            <div className="flex shrink-0 -space-x-3">
+              {similar.slice(0, 3).map((i) => (
+                <ItemThumb key={i.id} item={i} className="w-10 rounded-xl ring-2 ring-accent-soft" />
+              ))}
+            </div>
+            <p className="text-sm leading-snug text-ink">
+              {similar.length === 1 ? (
+                <>
+                  You already have something similar: <strong className="font-medium">{similar[0].name}</strong>.
+                </>
+              ) : (
+                <>
+                  You already have {similar.length} {pluralize(autoName.toLowerCase())}.
+                </>
+              )}
+              <span className="text-muted"> Still want to add it?</span>
+            </p>
+          </div>
+        )}
         <Button className="w-full" disabled={!canSave} onClick={save}>
           {saving
             ? 'Saving…'

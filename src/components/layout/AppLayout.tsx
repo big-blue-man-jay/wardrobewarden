@@ -12,7 +12,7 @@ export function AppLayout() {
   const matches = useMatches();
   const hideTabBar = matches.some((m) => (m.handle as RouteHandle | undefined)?.hideTabBar);
   return (
-    <ToastProvider>
+    <ToastProvider atTop={hideTabBar}>
       <ClosetFilterProvider>
         <main className={hideTabBar ? 'min-h-dvh' : 'min-h-dvh pb-[calc(5rem+env(safe-area-inset-bottom))]'}>
           <Outlet />

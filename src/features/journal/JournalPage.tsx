@@ -2,6 +2,7 @@ import { Link, useSearchParams } from 'react-router';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { EntryThumb } from '../../components/journal/EntryThumb';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { Segmented } from '../../components/ui/Segmented';
 import { CalendarIcon, ChevronLeftIcon, ChevronRightIcon } from '../../components/ui/icons';
 import { occasionLabel } from '../../config/tags';
 import { useEntriesBetween, useJournal } from '../../db/journal';
@@ -28,19 +29,14 @@ export function JournalPage() {
   return (
     <div className="animate-page">
       <PageHeader title="Journal">
-        <div className="grid grid-cols-2 rounded-full border border-line bg-card p-1 text-sm" role="tablist">
-          {(['calendar', 'list'] as View[]).map((v) => (
-            <button
-              key={v}
-              role="tab"
-              aria-selected={view === v}
-              onClick={() => update({ view: v === 'list' ? 'list' : null })}
-              className={`tap rounded-full py-2 capitalize ${view === v ? 'bg-ink text-paper' : 'text-muted'}`}
-            >
-              {v}
-            </button>
-          ))}
-        </div>
+        <Segmented
+          options={[
+            { id: 'calendar', label: 'Calendar' },
+            { id: 'list', label: 'List' },
+          ]}
+          value={view}
+          onChange={(v) => update({ view: v === 'list' ? 'list' : null })}
+        />
       </PageHeader>
       <div className="mx-auto max-w-3xl px-4 pt-1">
         {view === 'calendar' ? (

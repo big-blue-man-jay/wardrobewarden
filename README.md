@@ -52,7 +52,7 @@ occasions and materials. Data stores only the stable `id` (e.g. `'olive'`), neve
 - **Avoid deleting** an id that pieces use; they'd keep the id but it would show as raw text. Rename instead.
 - New *categories* also need a slot rule in `src/lib/looks.ts` if they should appear in the outfit builder.
 
-Other knobs (currency default, the 60-day "forgotten" threshold, image sizes, background-removal model) are in
+Other knobs (currency default, the 60-day "forgotten" threshold, image sizes) are in
 `src/config/app.ts`.
 
 ## What's built
@@ -62,12 +62,11 @@ Other knobs (currency default, the 60-day "forgotten" threshold, image sizes, ba
 - **Closet**: grid of cutouts on neutral tiles; search (name, brand, notes); combinable filters (category, type,
   color, season, occasion, material, brand, favorites, not worn in 60+ days, never worn) shown as removable
   chips that persist while navigating; sort by newest, name, most/least worn, recently worn, price, cost per wear.
-- **Add piece**: take or choose a photo → automatic background removal (with progress, skip, cutout/original
-  toggle) → tap preset chips → save in seconds. Partial purchase dates (year / month / day / don't remember),
-  optional details, auto-generated names, remembered seasons/occasions, duplicate notice. Photos that already
-  have a transparent background (e.g. iPhone "lift subject") are kept as cutouts.
-- **Piece profile ("Steckbrief")**: photo (tap to switch cutout/original, choose which one the closet uses,
-  remove the background later), basics, purchase with "owned for", usage (times worn, first/last worn, cost per
+- **Add piece**: take or choose a photo → tap preset chips → save in seconds. Photos with a transparent
+  background (e.g. iPhone "lift subject") are kept as cutouts. Partial purchase dates (year / month / day /
+  don't remember), optional details, auto-generated names, remembered seasons/occasions, duplicate notice.
+- **Piece profile ("Steckbrief")**: photo (tap to switch cutout/original and choose which one the closet uses),
+  basics, purchase with "owned for", usage (times worn, first/last worn, cost per
   wear, looks), wear history, notes; every section edits on its own; style this, log as worn today, delete.
 - **Looks**: outfit builder with slots (top, bottom/dress, layers, shoes, bag, accessories), item picker with the
   closet's filters, live flat-lay collage, name/occasion/season; looks list filterable by occasion and season;
@@ -78,7 +77,7 @@ Other knobs (currency default, the 60-day "forgotten" threshold, image sizes, ba
 - **Insights**: pieces, wardrobe value, average cost per wear; palette grid (one square per piece in its main
   color) and color breakdown; categories; forgotten pieces with "style this"; most/least worn; best/worst value;
   days logged per month.
-- **Settings**: currency, backup export/import, background removal on/off + offline download, demo data.
+- **Settings**: currency, backup export/import, demo data.
 - **PWA**: installable, offline, demo data on first launch.
 
 ## Where things live
@@ -87,29 +86,19 @@ Other knobs (currency default, the 60-day "forgotten" threshold, image sizes, ba
 | --- | --- |
 | `src/config/` | Preset tags (`tags.ts`) and app settings (`app.ts`) |
 | `src/db/` | Dexie schema, all reads/writes, derived wear stats, backup, demo seed data |
-| `src/image/` | Resizing, thumbnails, transparency detection, background removal (worker + interface) |
+| `src/image/` | Resizing, thumbnails, transparency detection and trimming of cutouts |
 | `src/lib/` | Pure logic: filters/sort, looks/slots/collage layout, insights, dates, naming |
 | `src/features/` | One folder per screen |
 | `src/components/` | Shared UI (tab bar, sheets, chips, item tiles, collage, pickers) |
-| `scripts/bgRemovalAssets.ts` | Vite plugin that bundles the background-removal model |
 
-## Background removal
+## Cutouts
 
-- Runs fully on the device with `@imgly/background-removal` **1.4.5**, in a Web Worker
-  (`src/image/bgRemoval.worker.ts`) behind the small `BackgroundRemover` interface in
-  `src/image/backgroundRemoval.ts`; swap or remove the implementation there.
-- Pinned to 1.4.5 because it's the newest version whose model files are on npm
-  (`@imgly/background-removal-data`); newer versions only ship them via IMG.LY's CDN.
-- `scripts/bgRemovalAssets.ts` copies the "small" model (~44 MB) and the ONNX runtime from `node_modules` into
-  `dist/bg-removal/` at build time (and serves them in dev). Nothing is fetched from third parties. The service
-  worker caches them on first use; after that removal works offline.
-- If it fails, is skipped or is switched off (Settings), the original photo is used. Both photos are kept.
-- **License:** `@imgly/background-removal` is **AGPL-3.0**. Fine for personal use; if you ever distribute or host
-  the app for others, AGPL obligations apply (or get IMG.LY's commercial license).
-- To stop using it, switch it off in Settings (the original photo is then always used; your phone's own
-  cutout feature still works, since transparent photos are kept as cutouts). To remove it from the code: delete
-  `src/image/bgRemoval.worker.ts` and the `ImglyRemover` class, the plugin in `vite.config.ts`, the two
-  `@imgly` packages, and the UI that calls `makeCutout` / `getRemover` (Add piece, piece header, Settings).
+There is no built-in background removal (it was tried and removed to keep the app small and free of AGPL
+code). For clean flat-lay cutouts, use the phone's own feature, e.g. on iPhone touch and hold the piece in
+Photos to lift it from the background, then save or share it as an image. When you add a photo that already has
+a transparent background, the app keeps it as the cutout automatically (`hasTransparency` in
+`src/image/resize.ts`); otherwise the photo is used as is. Pieces with both photos can switch between them on
+their profile.
 
 ## Data model notes (changes vs. the brief)
 
@@ -118,7 +107,7 @@ Other knobs (currency default, the 60-day "forgotten" threshold, image sizes, ba
 - `isDemo` on items, looks and journal entries, so "Remove demo data" deletes only demo records.
 - `createdAt` / `updatedAt` on all records.
 - `JournalEntry.photoThumb`: small copy of the mirror photo for the calendar and lists.
-- A `settings` key/value table (currency, background removal, last-used seasons/occasions, last backup…).
+- A `settings` key/value table (currency, last-used seasons/occasions, last backup…).
 - Wear counts, first/last worn and cost per wear are always derived from journal entries (one source of truth).
 - "Not worn in 60+ days" counts from the last wear; never-worn pieces count from when they were added, so a new
   piece isn't instantly "forgotten".
@@ -131,8 +120,7 @@ Other knobs (currency default, the 60-day "forgotten" threshold, image sizes, ba
   using the app in a Safari tab (instead of from the Home Screen) lets Safari clear it after about a week
   without a visit. Install it to the Home Screen and **export backups**. The app asks for persistent storage.
 - No sync between devices; move data with Export/Import (it replaces everything on the target device).
-- Background removal needs a reasonably recent phone, takes a few seconds per photo and the first use downloads
-  ~44 MB. Busy backgrounds give rougher cutouts; use "Original" or your phone's own cutout feature.
+- No built-in background removal; cutouts come from the phone's own feature (see Cutouts).
 - Colors are the tags you pick, not detected from the photo.
 - One journal entry per day; future days can't be planned.
 - Demo garments are simple drawings.
@@ -144,5 +132,6 @@ Other knobs (currency default, the 60-day "forgotten" threshold, image sizes, ba
 - Planned outfits for future days and packing lists for trips.
 - Weather-aware suggestions; "outfit of the day" ideas from least-worn pieces.
 - Auto-tagging colors from the cutout; custom tags.
+- Share a look or piece as an image via the share sheet.
 - Optional encrypted cloud backup or device-to-device sync.
 - Wishlist with "what would this go with?" using existing pieces.

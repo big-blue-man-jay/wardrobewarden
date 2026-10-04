@@ -3,7 +3,7 @@ import { buildBackup, parseBackup, type BackupData, type BackupSummary } from '.
 import { setSetting } from './settings';
 
 /** Settings that describe this device rather than my wardrobe, so they aren't exported. */
-const DEVICE_SETTINGS = new Set(['bgModelReady', 'lastBackupAt']);
+const DEVICE_SETTINGS = new Set(['lastBackupAt']);
 
 export async function exportAll(): Promise<{ bytes: Uint8Array; summary: BackupSummary }> {
   const [items, looks, journal, settings] = await Promise.all([

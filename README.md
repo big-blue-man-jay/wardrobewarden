@@ -58,3 +58,6 @@ Each origin (LAN address vs. hosted URL) has its own separate data. Use Export/I
 - `JournalEntry.photoThumb` — small copy of the selfie for the calendar.
 - A `settings` key/value table (currency, background removal on/off, last-used seasons/occasions).
 - Wear counts, first/last worn and cost-per-wear are always derived from journal entries.
+- Looks keep only `itemIds`; the builder saves them slot by slot (top, bottom/dress, layer, shoes, bag,
+  accessories) and slots are rebuilt from each piece's category, so no slot field is stored. A second top
+  (e.g. a cardigan) becomes the layer.

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
+import { BottomActionBar } from '../../components/layout/BottomActionBar';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { PhotoPicker } from '../../components/items/PhotoPicker';
 import { PurchaseDateField } from '../../components/items/PurchaseDateField';
@@ -117,74 +118,95 @@ export function AddItemPage() {
   };
 
   return (
-    <div className="animate-page">
-      <PageHeader title="Add piece" back backTo="/closet" />
-      <div className="mx-auto max-w-xl space-y-7 px-4 pb-32">
-        <section>
-          {photo && previewUrl ? (
-            <div>
-              <div className="flex aspect-square items-center justify-center overflow-hidden rounded-3xl bg-tile">
-                <img src={previewUrl} alt="New piece" className="h-full w-full object-cover" />
+    <>
+      <div className="animate-page">
+        <PageHeader title="Add piece" back backTo="/closet" />
+        <div className="mx-auto max-w-xl space-y-7 px-4 pb-32">
+          <section>
+            {photo && previewUrl ? (
+              <div>
+                <div className="flex aspect-square items-center justify-center overflow-hidden rounded-3xl bg-tile">
+                  <img src={previewUrl} alt="New piece" className="h-full w-full object-cover" />
+                </div>
+                <div className="mt-3 flex justify-center">
+                  <PhotoPicker compact onPick={pickPhoto} />
+                </div>
               </div>
-              <div className="mt-3 flex justify-center">
-                <PhotoPicker compact onPick={pickPhoto} />
+            ) : processing ? (
+              <div className="flex aspect-[2/1] items-center justify-center rounded-3xl bg-tile text-sm text-muted">
+                Preparing photo…
               </div>
-            </div>
-          ) : processing ? (
-            <div className="flex aspect-[2/1] items-center justify-center rounded-3xl bg-tile text-sm text-muted">
-              Preparing photo…
-            </div>
-          ) : (
-            <PhotoPicker onPick={pickPhoto} />
-          )}
-          {photoError && <p className="mt-2 text-sm text-accent">{photoError}</p>}
-        </section>
+            ) : (
+              <PhotoPicker onPick={pickPhoto} />
+            )}
+            {photoError && <p className="mt-2 text-sm text-accent">{photoError}</p>}
+          </section>
 
-        <CategoryField value={category} onChange={changeCategory} />
-        <SubcategoryField category={category} value={subcategory} onChange={setSubcategory} />
-        <ColorsField value={colors} onChange={setColors} />
-        <SeasonsField value={seasons} onChange={setSeasons} />
-        <OccasionsField value={occasions} onChange={setOccasions} />
-        <MaterialField value={material} onChange={setMaterial} />
-        <PurchaseDateField value={purchaseDate} onChange={setPurchaseDate} />
+          <CategoryField value={category} onChange={changeCategory} />
+          <SubcategoryField category={category} value={subcategory} onChange={setSubcategory} />
+          <ColorsField value={colors} onChange={setColors} />
+          <SeasonsField value={seasons} onChange={setSeasons} />
+          <OccasionsField value={occasions} onChange={setOccasions} />
+          <MaterialField value={material} onChange={setMaterial} />
+          <PurchaseDateField value={purchaseDate} onChange={setPurchaseDate} />
 
-        <section>
-          <button
-            type="button"
-            onClick={() => setShowMore((v) => !v)}
-            className="tap flex w-full items-center justify-between rounded-xl border border-line bg-card px-4 py-3"
-          >
-            <span>
-              <span className="block font-medium">More details</span>
-              <span className="block text-xs text-muted">Name, brand, size, price, where bought, notes</span>
-            </span>
-            <ChevronRightIcon className={`transition-transform ${showMore ? 'rotate-90' : ''}`} />
-          </button>
-          {showMore && (
-            <div className="animate-page mt-4 space-y-4">
-              <TextField label="Name" value={name} onChange={(e) => setName(e.target.value)} placeholder={autoName || 'e.g. Black jeans'} />
-              <div className="grid grid-cols-2 gap-3">
-                <TextField label="Brand" value={brand} onChange={(e) => setBrand(e.target.value)} />
-                <TextField label="Size" value={size} onChange={(e) => setSize(e.target.value)} />
+          <section>
+            <button
+              type="button"
+              onClick={() => setShowMore((v) => !v)}
+              className="tap flex w-full items-center justify-between rounded-xl border border-line bg-card px-4 py-3"
+            >
+              <span>
+                <span className="block font-medium">More details</span>
+                <span className="block text-xs text-muted">Name, brand, size, price, where bought, notes</span>
+              </span>
+              <ChevronRightIcon className={`transition-transform ${showMore ? 'rotate-90' : ''}`} />
+            </button>
+            {showMore && (
+              <div className="animate-page mt-4 space-y-4">
+                <TextField
+                  label="Name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder={autoName || 'e.g. Black jeans'}
+                />
+                <div className="grid grid-cols-2 gap-3">
+                  <TextField label="Brand" value={brand} onChange={(e) => setBrand(e.target.value)} />
+                  <TextField label="Size" value={size} onChange={(e) => setSize(e.target.value)} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <TextField
+                    label="Price"
+                    inputMode="decimal"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    placeholder="0.00"
+                  />
+                  <TextField label="Where bought" value={boughtAt} onChange={(e) => setBoughtAt(e.target.value)} />
+                </div>
+                <ConditionField value={condition} onChange={setCondition} />
+                <TextArea
+                  label="Notes"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Fit, care, the story behind it…"
+                />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <TextField label="Price" inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0.00" />
-                <TextField label="Where bought" value={boughtAt} onChange={(e) => setBoughtAt(e.target.value)} />
-              </div>
-              <ConditionField value={condition} onChange={setCondition} />
-              <TextArea label="Notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Fit, care, the story behind it…" />
-            </div>
-          )}
-        </section>
-      </div>
-
-      <div className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-line bg-paper/95 backdrop-blur-md">
-        <div className="mx-auto max-w-xl px-4 py-3">
-          <Button className="w-full" disabled={!canSave} onClick={save}>
-            {saving ? 'Saving…' : !photo ? 'Add a photo to save' : !category ? 'Pick a category to save' : `Save ${name.trim() || autoName}`}
-          </Button>
+            )}
+          </section>
         </div>
       </div>
-    </div>
+      <BottomActionBar>
+        <Button className="w-full" disabled={!canSave} onClick={save}>
+          {saving
+            ? 'Saving…'
+            : !photo
+              ? 'Add a photo to save'
+              : !category
+                ? 'Pick a category to save'
+                : `Save ${name.trim() || autoName}`}
+        </Button>
+      </BottomActionBar>
+    </>
   );
 }

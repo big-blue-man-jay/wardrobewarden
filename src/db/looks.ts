@@ -36,3 +36,9 @@ export function useLooks(): Look[] | undefined {
 export function useLook(id: string | undefined): Look | null | undefined {
   return useLiveQuery(async () => (id ? ((await db.looks.get(id)) ?? null) : null), [id]);
 }
+
+export async function duplicateLook(id: string): Promise<string | undefined> {
+  const look = await db.looks.get(id);
+  if (!look) return undefined;
+  return addLook({ name: `${look.name} (copy)`, itemIds: [...look.itemIds], occasions: [...look.occasions], seasons: [...look.seasons] });
+}

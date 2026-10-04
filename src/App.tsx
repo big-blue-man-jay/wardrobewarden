@@ -5,6 +5,8 @@ import { ClosetPage } from './features/closet/ClosetPage';
 import { InsightsPage } from './features/insights/InsightsPage';
 import { ItemPage } from './features/item/ItemPage';
 import { JournalPage } from './features/journal/JournalPage';
+import { LookBuilderPage } from './features/looks/LookBuilderPage';
+import { LookPage } from './features/looks/LookPage';
 import { LooksPage } from './features/looks/LooksPage';
 import { Placeholder } from './features/Placeholder';
 import { SettingsPage } from './features/settings/SettingsPage';
@@ -21,8 +23,9 @@ const router = createHashRouter([
       { path: 'closet/:id', element: <ItemPage /> },
       { path: 'add', element: <AddItemPage />, handle: { hideTabBar: true } satisfies RouteHandle },
       { path: 'looks', element: <LooksPage /> },
-      { path: 'looks/new', element: <Placeholder title="New look" milestone="M4" back /> },
-      { path: 'looks/:id', element: <Placeholder title="Look" milestone="M4" back /> },
+      { path: 'looks/new', element: <LookBuilderPage />, handle: { hideTabBar: true } satisfies RouteHandle },
+      { path: 'looks/:id', element: <LookPage /> },
+      { path: 'looks/:id/edit', element: <LookBuilderPage />, handle: { hideTabBar: true } satisfies RouteHandle },
       { path: 'journal', element: <JournalPage /> },
       { path: 'journal/:date', element: <Placeholder title="Journal entry" milestone="M5" back /> },
       { path: 'insights', element: <InsightsPage /> },

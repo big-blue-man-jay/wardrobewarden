@@ -8,7 +8,9 @@ export class WardrobeDB extends Dexie {
   settings!: EntityTable<SettingRow, 'key'>;
 
   constructor() {
-    super('wardrobe-warden');
+    // Dexie's optimistic live-query cache occasionally served a deleted look after an add → update → delete
+    // sequence; with a personal-sized closet, plain re-querying is fast enough and always correct.
+    super('wardrobe-warden', { cache: 'disabled' });
     // Only indexed fields are listed (booleans can't be IndexedDB keys, so isDemo/favorite aren't indexed). Add a new version() block for schema changes; never edit old ones.
     this.version(1).stores({
       items: 'id, category, createdAt',

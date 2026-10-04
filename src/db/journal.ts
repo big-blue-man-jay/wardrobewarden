@@ -70,3 +70,12 @@ export function useEntriesBetween(from: string, to: string): Map<string, Journal
     [from, to],
   );
 }
+
+/** Logs a saved look on a day, replacing that day's pieces but keeping its photo, rating and note. */
+export async function logLookOnDay(date: string, look: { id: string; itemIds: string[] }): Promise<void> {
+  await db.transaction('rw', db.journal, async () => {
+    const existing = await db.journal.where('date').equals(date).first();
+    if (existing) await db.journal.update(existing.id, { itemIds: [...look.itemIds], lookId: look.id, updatedAt: Date.now() });
+    else await saveEntry(date, { itemIds: [...look.itemIds], lookId: look.id });
+  });
+}
